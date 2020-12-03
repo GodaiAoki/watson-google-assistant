@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.com/IBM/watson-google-assistant.svg?branch=master)](https://travis-ci.com/IBM/watson-google-assistant)
 
-# Create an Action for Google Assistant using Watson Assistant
+# Create an Action for Google Assistant using Watson Assistant for conversational actions
 
 This code pattern includes a Watson Assistant workspace to demonstrate an implementation of a retail agent that can ask for reservation schedules and specifics. To demonstrate how to test it with Google Assistant devices, we will setup a Google Action that calls out to our Node.js server which interacts with Watson Assistant.
 
@@ -30,114 +30,185 @@ When the reader has completed this code pattern, they will understand how to:
 
 # Steps
 
-1. [Deploy the server](#deploy-the-server)
+## Run locally
 
-1. [Setup Google Actions](#setup-google-actions)
+1. [Clone the repo](#1-clone-the-repo)
+1. [Create a Watson Assistant skill](#2-create-a-watson-assistant-skill)
+1. [Configure credentials](#3-configure-credentials)
+1. [Create the OpenWhisk action](#4-create-the-openwhisk-action)
+1. [Create an Conversational Action](#5-create-conversational-action)
+1. [Talk to it](#6-talk-to-it)
 
-1. [Talk to it!](#talk-to-it)
+### 1. Clone the repo
 
-## Deploy the server
+Clone the `alexa-skill-watson-assistant` repo locally and `cd` to the local repo
+(for commands in later steps). In a terminal, run:
 
-Click on one of the options below for instructions on deploying the Node.js server.
+```bash
+git clone https://github.com/IBM/alexa-skill-watson-assistant
+cd alexa-skill-watson-assistant
+```
 
-[![openshift](https://raw.githubusercontent.com/IBM/pattern-utils/master/deploy-buttons/openshift.png)](doc/source/openshift.md) [![public](https://raw.githubusercontent.com/IBM/pattern-utils/master/deploy-buttons/cf.png)](doc/source/cf.md)
+### 2. Create a Watson Assistant skill
 
-## Setup Google Actions
+Sign up for [IBM Cloud](https://cloud.ibm.com/registration/) if you don't have an IBM Cloud account yet.
 
-1. Go to [Actions on Google Developer Console](https://console.actions.google.com)
+Use one or both of these options (with or without BAE) to setup an Assistant skill.
 
-1. Create your project
-   * Click on `New project`
-   * Enter a project name
-   * Choose the default language for your Actions
-   * Select your country or region
-   * Click on `Create project`
-   * Click on the `Actions SDK` card
-   * Click `OK`
+#### Using Bot Asset Exchange (BAE)
 
-1. Set the invocation name
+If you are using
+[BAE](https://developer.ibm.com/code/exchanges/bots),
+click on a `Deploy this bot` button to automatically create
+your Assistant service and import your skill. The service will be named
+`Bot Asset Exchange Workspaces` and can hold up to 5 selected skills.
 
-   * Under `Quick setup`, click `Decide how your Action is invoked`.
-   * Enter a display name. Users will say or type this name to explicitly invoke your action.
-   * Hit `Save`.
+#### Using the provided rent_a_car.json file
 
-1. Obtain your project ID
-   * Click on the vertical 3 dots next to your account avatar and go to `Project settings`.
-   * Save the `Project ID` to use later.
+Create the service by following this link and hitting `Create`:
 
-1. Clone the repo
+* [**Watson Assistant**](https://cloud.ibm.com/catalog/services/watson-assistant)
 
-   Clone the `watson-google-assistant` repo locally. In a terminal, run:
+Import the Assistant rent_a_car.json:
 
-   ```bash
-   git clone https://github.com/IBM/watson-google-assistant
-   ```
+* Find the Assistant service in your IBM Cloud Dashboard.
+* Click on the service and then click on `Launch Watson Assistant`.
+* Go to the `Skills` tab.
+* Click `Create skill`
+* Click the `Import skill` tab.
+* Click `Choose JSON file`, go to your cloned repo dir, and `Open` the rent_a_car.json file in [`data/assistant/rent_a_car.json`](data/assistant/rent_a_car.json).
+* Click `Import`.
 
-1. Install the `gactions` CLI
-   * Download the `gactions` CLI from [here](https://developers.google.com/actions/tools/gactions-cli).
-   * `chmod` the `gactions` file to make it executable.
-   * Copy the `gactions` file into your local repo's `actions` directory.
-     ```bash
-     # For example, depending on your download and repo directories...
+To find the `SKILL_ID` for Watson Assistant:
 
-     chmod +x ~/Downloads/gactions
-     cp ~/Downloads/gactions ~/watson-google-assistant/actions/
-     ```
+* Go back to the `Skills` tab.
+* Find the card for the workspace you would like to use. Look for `rent-a-car`, if you uploaded rent_a_car.json. The name will vary if you used BAE.
+* Click on the three dots in the upper right-hand corner of the card and select `View API Details`.
+* Copy the `Skill ID` GUID. Save it for the .params file in [Step 5](#5-configure-credentials).
 
-1. Edit `url` in the `actions/action.json` file in your local repo.
+![view_api_details](doc/source/images/view_api_details.png)
 
-   * If you deployed with OpenShift, use the URL you saved at the end of the OpenShift deployment (from a TLS secure `Hostname`).
+### 3. Configure credentials
 
-   * If you deployed with Cloud Foundry, use your app URL.
+The default runtime parameters need to be set for the action.
+These can be set on the command line or via the IBM Cloud UI.
+Here we've provided a params.sample file for you to copy and use
+with the `-param-file .params` option (which is used in the instructions below).
 
-   > Note: The URL must have an `https://` prefix!
+Copy the [`params.sample`](params.sample) to `.params`.
 
-1. Create the action using the CLI
-   > Note: If/when it prompts you to enter an authorization code, browse to the provided URL to login and authorize the CLI to use your account and copy/paste the auth code at the prompt.
+```bash
+cp params.sample .params
+```
 
-   * Run the `gactions` command to update your action and prepare it for testing. Use the project ID you saved earlier.
+Edit the `.params` file and add the required settings as described below.
 
-     ```bash
-     cd ~/watson-google-assistant/actions/
-     ./gactions update --action_package action.json --project <YOUR_PROJECT_ID>
-     ./gactions test --action_package action.json --project <YOUR_PROJECT_ID>
-     ```
+#### `params.sample:`
 
-## Talk to it!
+```json
+{
+  "ASSISTANT_APIKEY": "<add_assistant_apikey>",
+  "ASSISTANT_URL": "<add_assistant_url>",
+  "SKILL_ID": "<add_assistant_skill_id>",
+}
+```
 
-1. Test it in the simulator
+#### Finding the credentials
 
-   * Go back to your Actions on Google Developer Console
-   * Use the `Test` tab and start testing
-   * Type in the `Input` box or click on the microphone icon to use voice input
-   * Say "Talk to my test app" or "Talk to \<your app name\>" to initiate the conversation
+The credentials for IBM Cloud services can be found in the IBM Cloud UI.
 
-1. Try it with your phone, your Google Home, or other device
+* Go to your IBM Cloud Dashboard.
+* Find your Assistant service in the `Services` list.
+* Click on the service name.
+* `Manage` should be selected in the sidebar.
+* Use the copy icons to copy the `API Key` and `URL` and paste them into your .params file.
+* For `SKILL_ID`, use the Skill ID for Watson Assistant from [Step 2](#2-create-a-watson-assistant-skill).
 
-   * Log into the device with the same account you used to create your test app
-   * Say "Hey Google, talk to \<your app name\>"
-   * Alternatively, test the implicit invocation with "Hey Google, get me some wheels" or "Hey Google, rent a car"
+### 4. Create the OpenWhisk action
 
-1. Chat and fill in the "slots" using natural language
+As a prerequisite, [install the Cloud Functions (IBM Cloud OpenWhisk) CLI](https://cloud.ibm.com/docs/openwhisk?topic=cloud-functions-cli_install)
 
-1. Try some "digressions" such as:
+#### Create the OpenWhisk action
 
-   * Positive or negative feedback
-   * Ask to talk to the manager
-   * Are you a human?
-   * Do you know any jokes?
-   * Store hours
-   * Store locations
+Run these commands to gather Node.js requirements, zip the source files, and upload the zipped files
+to create a raw HTTP web action in OpenWhisk.
 
-1. If you want to submit the app for approval, follow Google's process documented [here](https://developers.google.com/actions/sdk/submit)
+> Note: You can use the same commands to update the action if you modify the code or the .params.
 
-## Sample output
+```sh
+npm install
+rm action.zip
+zip -r action.zip main.js package* node_modules
+ibmcloud wsk action update google-watson action.zip --kind nodejs:default --web raw --param-file .params
+```
 
-### Testing with the simulator
+#### Determine your IBM Cloud endpoint
 
-![Web Simulator](doc/source/images/simulator.png)
+To find this URL, navigate to [IBM Cloud Functions - Actions](https://cloud.ibm.com/openwhisk/actions), click on your
+`google-watson` action and use the sidebar to navigate to `Endpoints`.
 
-## License
+![functions_endpoints](doc/source/images/functions_endpoints.png)
+
+### 5. Create an Converastional Action
+
+help is here.
+https://developers.google.com/assistant/conversational/build/projects
+
+Go to https://console.actions.google.com and click the `New Project` button.
+
+Provide a name, Choose a language for your action `English`, hit the `create project` button.
+
+Select the **Custom** template and hit the `Next` button.
+
+Select the **Blank Project** template and hit the `start building` button.
+
+Provide an invocation name
+
+Register Webhook and set for No Match Intents:
+
+* In the left sidebar menu, click on `Webhook`, and choose `HTTPS Endpoint`.
+
+* Enter Endpoint of google-watson, and `Save`
+
+* In the left sidebar menu, click on `Main invocation`
+
+* Select `call your Webhook` and type event name.
+
+* In the left sidebar menu, click on `Intents` and select `NO_MATCH`
+
+* Select `call your Webhook` and type event name.
+
+### 6. Talk to it
+
+Use the `Test` tab in the Actions console.
+
+
+# Sample output
+
+Here is a sample conversation flow using the provided Watson Assistant rent_a_car.json:
+
+![sample_conversation](doc/source/images/sample_conversation.png)
+
+# Troubleshooting
+
+* Want to see debug logging
+
+  > Use the IBM Cloud UI to monitor logs, or use this CLI command to show the latest activation log:
+
+  ```bash
+  ibmcloud wsk activation list -l1 | tail -n1 | cut -d ' ' -f1 | xargs ibmcloud wsk activation logs
+  ```
+
+* Testing invoke from CLI
+
+  > Use these commands to invoke the action (named alexa-watson in the example) without any input, then check the latest logs. **Expect an error ("Must be called from Alexa")**.
+
+  ```bash
+  ibmcloud wsk action invoke alexa-watson -bvd
+  ibmcloud wsk activation list -l1 | tail -n1 | cut -d ' ' -f1 | xargs ibmcloud wsk activation logs
+  ```
+
+# License
 
 This code pattern is licensed under the Apache License, Version 2. Separate third-party code objects invoked within this code pattern are licensed by their respective providers pursuant to their own separate licenses. Contributions are subject to the [Developer Certificate of Origin, Version 1.1](https://developercertificate.org/) and the [Apache License, Version 2](https://www.apache.org/licenses/LICENSE-2.0.txt).
 
