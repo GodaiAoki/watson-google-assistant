@@ -147,6 +147,10 @@ Register Webhook and set for No Match Intents:
 
 * Select `call your Webhook` and type event name.
 
+* In the left sidebar menu, click on `Scene` and select `+`
+
+* type `askwatson` for scene name.
+
 ### 6. Talk to it
 
 Use the `Test` tab in the Actions console.
