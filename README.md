@@ -4,29 +4,15 @@
 
 This code pattern includes a Watson Assistant workspace to demonstrate an implementation of a retail agent that can ask for reservation schedules and specifics. To demonstrate how to test it with Google Assistant devices, we will setup a Google Action that calls out to our Node.js server which interacts with Watson Assistant.
 
-When the reader has completed this code pattern, they will understand how to:
-
-* Create a Google Assistant Action
-* Create a Node.js Express web application
-* Deploy the Node.js app with Red Hat OpenShift or Cloud Foundry on IBM Cloud
-* Interact with Google Assistant and Watson Assistant
-* Use the conversation token to maintain the context
-* Leverage the content catalog for general, customer care, and bot control intents
-* Handle digressions during a conversation
-
 ![architecture](doc/source/images/architecture.png)
 
 ## Flow
 
 1. User talks or types to Google Assistant.
 2. Google Assistant posts text to an HTTPS endpoint.
-3. Node.js server calls Watson Assistant to get the response.
+3. IBM Cloud functions calls Watson Assistant to get the response.
 4. The response is returned to Google Assistant.
 5. Google Assistant replies to the user.
-
-## Watch the Video
-
-[![video](https://img.youtube.com/vi/no0R0bSkHXc/0.jpg)](https://youtu.be/no0R0bSkHXc)
 
 # Steps
 
@@ -41,27 +27,10 @@ When the reader has completed this code pattern, they will understand how to:
 
 ### 1. Clone the repo
 
-Clone the `alexa-skill-watson-assistant` repo locally and `cd` to the local repo
-(for commands in later steps). In a terminal, run:
-
-```bash
-git clone https://github.com/IBM/alexa-skill-watson-assistant
-cd alexa-skill-watson-assistant
-```
-
 ### 2. Create a Watson Assistant skill
 
 Sign up for [IBM Cloud](https://cloud.ibm.com/registration/) if you don't have an IBM Cloud account yet.
 
-Use one or both of these options (with or without BAE) to setup an Assistant skill.
-
-#### Using Bot Asset Exchange (BAE)
-
-If you are using
-[BAE](https://developer.ibm.com/code/exchanges/bots),
-click on a `Deploy this bot` button to automatically create
-your Assistant service and import your skill. The service will be named
-`Bot Asset Exchange Workspaces` and can hold up to 5 selected skills.
 
 #### Using the provided rent_a_car.json file
 
